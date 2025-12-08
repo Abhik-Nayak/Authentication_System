@@ -8,6 +8,7 @@ public class AuthsystemApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(AuthsystemApplication.class, args);
+        System.out.println("🚀 AuthApp Backend is running...");
 	}
 
 }
