@@ -25,6 +25,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "user",
     },
+    // --- Email verification fields ---
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+    verifyToken: String,
+    verifyTokenExpires: Date,
   },
   { timestamps: true } // Automatically manages createdAt / updatedAt
 );

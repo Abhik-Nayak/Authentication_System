@@ -1,9 +1,17 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
+import mongoSanitize from "express-mongo-sanitize";
 import { User } from "../models/User.js";
 
 const router = express.Router();
+
+/* ===== APPLY SANITIZE MIDDLEWARE ===== */
+router.use(
+  mongoSanitize({
+    replaceWith: "_",
+  })
+);
 
 const createToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -14,9 +22,7 @@ const createToken = (userId) => {
 /* ===== ZOD SCHEMAS ===== */
 const registerSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
   name: z.string().min(1, { message: "Name is required" }),
 });
 
@@ -25,7 +31,7 @@ const loginSchema = z.object({
   password: z.string().min(1, { message: "Password is required" }),
 });
 
-/* ===== VALIDATION MIDDLEWARE ===== */
+/* ===== ZOD VALIDATION MIDDLEWARE ===== */
 const formatZodErrors = (zodErr) =>
   zodErr.errors.map((e) => ({
     path: e.path.join("."),
@@ -37,8 +43,7 @@ const validate = (schema) => (req, res, next) => {
   if (!result.success) {
     return res.status(400).json({ errors: formatZodErrors(result.error) });
   }
-  // replace req.body with the parsed/validated data
-  req.body = result.data;
+  req.body = result.data; // sanitized + validated
   next();
 };
 
@@ -65,8 +70,8 @@ router.post("/register", validate(registerSchema), async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Register error:", err);
-    res.status(500).json({ error: "Registration failed" });
+    console.log("Register error:", err);
+    res.status(500).json({ error: "Registration failed." });
   }
 });
 
