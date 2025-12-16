@@ -11,7 +11,8 @@ passport.use(new GoogleStrategy({
     console.log(profile);
     
     try {
-      let user = await User.findOneAndUpdate({ googleId: profile.id }, {isLoggedIn:true});
+      // let user = await User.findOneAndUpdate({ googleId: profile.id }, {isLoggedIn:true});
+      let user = await User.findOneAndUpdate({ email:profile.emails[0].value }, {isLoggedIn:true}, {avatar: profile.photos[0].value});
           
       if(!user){
         user = await User.create({

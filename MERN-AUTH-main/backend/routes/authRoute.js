@@ -8,10 +8,7 @@ const router = express.Router();
 //Step-1: Redirect to Google login
 router.get("/google", passport.authenticate("google", {scope:["profile", "email"]}))
 
-router.get("/google/callback", 
-
-    passport.authenticate("google", {session:false}),
-    (req, res)=>{
+router.get("/google/callback", passport.authenticate("google", {session:false}),(req, res)=>{
         try {
             const token = jwt.sign({id:req.user._id, email:req.user.email}, process.env.SECRET_KEY, {expiresIn:"7d"})
             res.redirect(`${process.env.CLIENT_URL}/auth-success?token=${token}`)
