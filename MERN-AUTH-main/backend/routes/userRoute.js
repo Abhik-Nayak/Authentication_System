@@ -6,7 +6,9 @@ import {
   logoutUser,
   registerUser,
   resendVerification,
+  setup2FA,
   verification,
+  verify2FA,
   verifyOTP,
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middleware/isAuthenticated.js";
@@ -16,11 +18,17 @@ const router = express.Router();
 
 router.post("/register", validateUser(userSchema), registerUser);
 router.post("/verify", verification);
-router.post("/login", loginUser);
-router.post("/logout", isAuthenticated, logoutUser);
 router.post("/forgot-password", forgotPassword);
 router.post("/verify-otp/:email", verifyOTP);
 router.post("/change-password/:email", changePassword);
 router.post("/resend-verification", resendVerification);
+router.post("/login", loginUser);
+
+router.post("/2fa/setup", isAuthenticated, setup2FA);
+router.post("/2fa/verify", isAuthenticated, verify2FA);
+
+
+router.post("/logout", isAuthenticated, logoutUser);
+
 
 export default router;

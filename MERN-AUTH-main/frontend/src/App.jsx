@@ -11,6 +11,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import VerifyOTP from "./pages/VerifyOTP";
 import ChangePassword from "./pages/ChangePassword";
 import AuthSuccess from "./pages/AuthSuccess";
+import TwoFactorSettings from "./pages/TwoFactorSettings";
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,14 @@ const router = createBrowserRouter([
       <ProtectedRoute>
         <Navbar />
         <Home />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/settings",
+    element: (
+      <ProtectedRoute>
+        <TwoFactorSettings />
       </ProtectedRoute>
     ),
   },
