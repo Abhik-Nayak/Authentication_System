@@ -4,6 +4,8 @@ import { Session } from "../models/sessionModel.js";
 import { User } from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import speakeasy from "speakeasy";
+import QRCode from "qrcode";
 
 export const registerUser = async (req, res) => {
   try {
@@ -104,66 +106,93 @@ export const verification = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    // 1️⃣ Validate input
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        message: "Email and password are required",
       });
     }
+
+    // 2️⃣ Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized access",
-      });
-    }
-    const passwordCheck = await bcrypt.compare(password, user.password);
-    if (!passwordCheck) {
-      return res.status(402).json({
-        success: false,
-        message: "Incorrect Password",
+        message: "Invalid email or password",
       });
     }
 
-    //check if user is verified
-    if (user.isVerified !== true) {
+    // 3️⃣ Check password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    // 4️⃣ Check account verification
+    if (!user.isVerified) {
       return res.status(403).json({
         success: false,
-        message: "Verify your account than login",
+        message: "Please verify your account before login",
       });
     }
 
-    // check for existing session and delete it
-    const existingSession = await Session.findOne({ userId: user._id });
-    if (existingSession) {
-      await Session.deleteOne({ userId: user._id });
+    // 5️⃣ If 2FA is enabled → stop here
+    if (user.twoFactorEnabled) {
+      return res.status(200).json({
+        success: true,
+        twoFactorRequired: true,
+        userId: user._id,
+        message: "2FA verification required",
+      });
     }
 
-    //create a new session
+    // -----------------------------
+    // NORMAL LOGIN (NO 2FA)
+    // -----------------------------
+
+    // 6️⃣ Remove existing session (single-session policy)
+    await Session.deleteOne({ userId: user._id });
+
+    // 7️⃣ Create new session
     await Session.create({ userId: user._id });
 
-    //Generate tokens
-    const accessToken = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
-      expiresIn: "10d",
-    });
-    const refreshToken = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
-      expiresIn: "30d",
-    });
+    // 8️⃣ Generate JWT tokens
+    const accessToken = jwt.sign(
+      { id: user._id },
+      process.env.SECRET_KEY,
+      { expiresIn: "10d" }
+    );
 
+    const refreshToken = jwt.sign(
+      { id: user._id },
+      process.env.SECRET_KEY,
+      { expiresIn: "30d" }
+    );
+
+    // 9️⃣ Update user state
     user.isLoggedIn = true;
     await user.save();
 
+    // 🔟 Respond
     return res.status(200).json({
       success: true,
       message: `Welcome back ${user.username}`,
       accessToken,
       refreshToken,
       user,
+      twoFactorRequired: false,
     });
+
   } catch (error) {
+    console.error("Login error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Internal server error",
     });
   }
 };
@@ -331,4 +360,44 @@ export const resendVerification = async (req, res) => {
   await verifyMail(token, email);
 
   res.json({ success: true, message: "Verification email resent" });
+};
+
+export const setup2FA = async (req, res) => {
+  const user = req.user;
+
+  const secret = speakeasy.generateSecret({
+    name: `AuthSystem (${user.email})`,
+  });
+
+  user.twoFactorSecret = secret.base32;
+  await user.save();
+
+  const qrCode = await QRCode.toDataURL(secret.otpauth_url);
+
+  res.json({
+    success: true,
+    qrCode,
+    manualKey: secret.base32,
+  });
+};
+
+export const verify2FA = async (req, res) => {
+  const { token } = req.body;
+  const user = req.user;
+
+  const verified = speakeasy.totp.verify({
+    secret: user.twoFactorSecret,
+    encoding: "base32",
+    token,
+    window: 1,
+  });
+
+  if (!verified) {
+    return res.status(400).json({ success: false, message: "Invalid OTP" });
+  }
+
+  user.twoFactorEnabled = true;
+  await user.save();
+
+  res.json({ success: true, message: "2FA enabled successfully" });
 };
