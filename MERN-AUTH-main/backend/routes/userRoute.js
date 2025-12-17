@@ -9,6 +9,7 @@ import {
   setup2FA,
   verification,
   verify2FA,
+  verify2FALogin,
   verifyOTP,
 } from "../controllers/userController.js";
 import { isAuthenticated } from "../middleware/isAuthenticated.js";
@@ -24,8 +25,11 @@ router.post("/change-password/:email", changePassword);
 router.post("/resend-verification", resendVerification);
 router.post("/login", loginUser);
 
+// Multi Factor route setup
 router.post("/2fa/setup", isAuthenticated, setup2FA);
 router.post("/2fa/verify", isAuthenticated, verify2FA);
+router.post("/2fa/login", verify2FALogin);
+
 
 
 router.post("/logout", isAuthenticated, logoutUser);

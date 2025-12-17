@@ -162,17 +162,13 @@ export const loginUser = async (req, res) => {
     await Session.create({ userId: user._id });
 
     // 8️⃣ Generate JWT tokens
-    const accessToken = jwt.sign(
-      { id: user._id },
-      process.env.SECRET_KEY,
-      { expiresIn: "10d" }
-    );
+    const accessToken = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
+      expiresIn: "10d",
+    });
 
-    const refreshToken = jwt.sign(
-      { id: user._id },
-      process.env.SECRET_KEY,
-      { expiresIn: "30d" }
-    );
+    const refreshToken = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
+      expiresIn: "30d",
+    });
 
     // 9️⃣ Update user state
     user.isLoggedIn = true;
@@ -187,7 +183,6 @@ export const loginUser = async (req, res) => {
       user,
       twoFactorRequired: false,
     });
-
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({
@@ -362,6 +357,7 @@ export const resendVerification = async (req, res) => {
   res.json({ success: true, message: "Verification email resent" });
 };
 
+// This one send you a QR code by using you get OTP in google authenticator app
 export const setup2FA = async (req, res) => {
   const user = req.user;
 
@@ -381,6 +377,7 @@ export const setup2FA = async (req, res) => {
   });
 };
 
+// Use that OTP then only  twoFactor auth will enabled
 export const verify2FA = async (req, res) => {
   const { token } = req.body;
   const user = req.user;
@@ -400,4 +397,51 @@ export const verify2FA = async (req, res) => {
   await user.save();
 
   res.json({ success: true, message: "2FA enabled successfully" });
+};
+
+//After two factor enabled when user logged in though email and password then only for user veify through 2FA login and acces the app
+export const verify2FALogin = async (req, res) => {
+  const { userId, token } = req.body;
+
+  if (!userId || !token) {
+    return res.status(400).json({ message: "Missing data" });
+  }
+
+  const user = await User.findById(userId);
+  if (!user || !user.twoFactorEnabled) {
+    return res.status(400).json({ message: "Invalid request" });
+  }
+
+  const verified = speakeasy.totp.verify({
+    secret: user.twoFactorSecret,
+    encoding: "base32",
+    token,
+    window: 1,
+  });
+
+  if (!verified) {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
+
+  // ✅ Issue JWT after OTP success
+  // const jwtToken = jwt.sign(
+  //   { id: user._id, email: user.email },
+  //   process.env.SECRET_KEY,
+  //   { expiresIn: "7d" }
+  // );
+  // 8️⃣ Generate JWT tokens
+  const accessToken = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
+    expiresIn: "10d",
+  });
+
+  const refreshToken = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
+    expiresIn: "30d",
+  });
+
+  res.json({
+    success: true,
+    accessToken,
+    refreshToken,
+    user,
+  });
 };

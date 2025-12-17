@@ -12,6 +12,7 @@ import VerifyOTP from "./pages/VerifyOTP";
 import ChangePassword from "./pages/ChangePassword";
 import AuthSuccess from "./pages/AuthSuccess";
 import TwoFactorSettings from "./pages/TwoFactorSettings";
+import TwoFactorLogin from "./pages/TwoFactorLogin";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
   {
     path: "/signup",
     element: <Signup />,
+  },
+  {
+    path: "/2fa-login",
+    element: <TwoFactorLogin/>,
   },
   {
     path: "/verify",
