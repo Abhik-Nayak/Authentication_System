@@ -172,7 +172,7 @@ const Login = () => {
             {/* Google Login */}
             <Button
               onClick={() =>
-                window.open("http://localhost:8000/auth/google", "_self")
+                window.open("http://localhost:8000/api/auth/google", "_self")
               }
               variant="outline"
               className="w-full rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10"

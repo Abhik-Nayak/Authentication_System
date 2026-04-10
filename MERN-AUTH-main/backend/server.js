@@ -17,8 +17,16 @@ app.use(cors({
     credentials:true
 }))
 
-app.use('/auth', authRoute)
-app.use('/user', userRoute)
+app.use('/api/auth', authRoute)
+app.use('/api/user', userRoute)
+
+// Health check / test route
+app.get('/api', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'API is working 🚀'
+    });
+});
 
 // http://localhost:5000/user/register
 
