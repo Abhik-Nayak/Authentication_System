@@ -1,16 +1,27 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import OTPInput from "@/components/ui/OTPInput";
 import api from "@/lib/axios";
+import AuthLayout from "@/components/AuthLayout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, ShieldCheck, CheckCircle, ArrowLeft } from "lucide-react";
 
 export default function TwoFactorSettings() {
   const accessToken = localStorage.getItem("accessToken");
+  const navigate = useNavigate();
   const [step, setStep] = useState("idle"); // idle | qr | success
   const [qrCode, setQrCode] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // STEP 1: Enable 2FA → get QR
   const handleEnable2FA = async () => {
     try {
       setLoading(true);
@@ -32,12 +43,12 @@ export default function TwoFactorSettings() {
     }
   };
 
-  // STEP 2: Verify OTP
   const handleVerifyOTP = async () => {
     if (otp.length !== 6) return;
 
     try {
       setLoading(true);
+      setError("");
       await api.post(
         "user/2fa/verify",
         { token: otp },
@@ -56,36 +67,60 @@ export default function TwoFactorSettings() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#0B0F19] flex items-center justify-center px-4">
-      {/* Gradient blobs */}
-      <div className="absolute -top-32 -left-32 h-[400px] w-[400px] rounded-full bg-emerald-500/30 blur-[120px]" />
-      <div className="absolute -bottom-32 -right-32 h-[400px] w-[400px] rounded-full bg-cyan-500/30 blur-[120px]" />
+    <AuthLayout>
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <div className="mx-auto w-fit rounded-full p-3 bg-emerald-500/10 mb-2">
+          <ShieldCheck className="h-8 w-8 text-emerald-400" />
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight text-white">
+          Two-Factor Authentication
+        </h1>
+        <p className="text-gray-400 text-sm">
+          Add an extra layer of security to your account
+        </p>
+      </div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl rounded-2xl p-8 space-y-6 text-center">
-          <h2 className="text-2xl font-semibold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-            Two-Factor Authentication
-          </h2>
+      {/* Glass Card */}
+      <Card className="w-full backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl rounded-2xl">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+            {step === "idle" && "Setup 2FA"}
+            {step === "qr" && "Scan QR Code"}
+            {step === "success" && "2FA Enabled"}
+          </CardTitle>
+          <CardDescription className="text-center text-gray-400">
+            {step === "idle" &&
+              "Protect your account with an authenticator app"}
+            {step === "qr" &&
+              "Scan the QR code with Google Authenticator or Authy"}
+            {step === "success" &&
+              "Your account is now protected with 2FA"}
+          </CardDescription>
+        </CardHeader>
 
+        <CardContent className="space-y-4">
           {/* STEP 0: Enable */}
           {step === "idle" && (
-            <button
+            <Button
               onClick={handleEnable2FA}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-semibold py-2 rounded-lg transition hover:opacity-90 disabled:opacity-60"
+              className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-semibold hover:opacity-90 transition"
             >
-              {loading ? "Enabling..." : "Enable 2FA"}
-            </button>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enabling...
+                </>
+              ) : (
+                "Enable 2FA"
+              )}
+            </Button>
           )}
 
           {/* STEP 1: QR + OTP */}
           {step === "qr" && (
             <div className="space-y-4">
-              <p className="text-gray-300 text-sm">
-                Scan this QR code using Google Authenticator or Authy
-              </p>
-
               <img
                 src={qrCode}
                 alt="2FA QR Code"
@@ -94,31 +129,51 @@ export default function TwoFactorSettings() {
 
               <OTPInput value={otp} onChange={setOtp} />
 
-              {error && <p className="text-red-400 text-sm">{error}</p>}
+              {error && (
+                <p className="text-red-400 text-sm text-center">{error}</p>
+              )}
 
-              <button
+              <Button
                 onClick={handleVerifyOTP}
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-semibold py-2 rounded-lg transition hover:opacity-90 disabled:opacity-60"
+                disabled={loading || otp.length !== 6}
+                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-semibold hover:opacity-90 transition"
               >
-                {loading ? "Verifying..." : "Verify & Enable"}
-              </button>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  "Verify & Enable"
+                )}
+              </Button>
             </div>
           )}
 
           {/* STEP 2: SUCCESS */}
           {step === "success" && (
-            <div className="space-y-3">
+            <div className="space-y-4 text-center">
+              <div className="mx-auto w-fit rounded-full p-3 bg-emerald-500/10">
+                <CheckCircle className="h-8 w-8 text-emerald-400" />
+              </div>
               <p className="text-emerald-400 text-lg font-semibold">
-                🎉 2FA Enabled Successfully
+                2FA Enabled Successfully
               </p>
-              <p className="text-gray-300 text-sm">
+              <p className="text-gray-400 text-sm">
                 Your account is now protected with two-factor authentication.
               </p>
+              <Button
+                onClick={() => navigate("/")}
+                variant="outline"
+                className="rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to home
+              </Button>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+    </AuthLayout>
   );
 }

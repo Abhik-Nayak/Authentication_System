@@ -1,7 +1,9 @@
 import express from "express";
 import {
   changePassword,
+  deleteUserById,
   forgotPassword,
+  getAllUsers,
   loginUser,
   logoutUser,
   registerUser,
@@ -34,5 +36,8 @@ router.post("/2fa/login", verify2FALogin);
 
 router.post("/logout", isAuthenticated, logoutUser);
 
+// Testing routes
+router.get("/all", getAllUsers);
+router.delete("/:id", deleteUserById);
 
 export default router;

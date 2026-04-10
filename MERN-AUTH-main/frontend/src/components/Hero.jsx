@@ -52,7 +52,7 @@ const Hero = () => {
               </Button>
 
               <Button
-               onClick={() => navigate("/settings")}
+                // onClick={() => navigate("/settings")}
                 variant="outline"
                 size="lg"
                 className="h-12 px-8 rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10"

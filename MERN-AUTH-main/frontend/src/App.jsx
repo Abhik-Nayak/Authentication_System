@@ -5,7 +5,6 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import VerifyEmail from "./pages/VerifyEmail";
 import Verify from "./pages/Verify";
-import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyOTP from "./pages/VerifyOTP";
@@ -13,32 +12,46 @@ import ChangePassword from "./pages/ChangePassword";
 import AuthSuccess from "./pages/AuthSuccess";
 import TwoFactorSettings from "./pages/TwoFactorSettings";
 import TwoFactorLogin from "./pages/TwoFactorLogin";
+import NotFound from "./pages/NotFound";
+import Layout from "./components/Layout";
+import Settings from "./pages/Settings";
 
 const router = createBrowserRouter([
+  // Protected routes with Navbar
   {
-    path: "/",
     element: (
       <ProtectedRoute>
-        <Navbar />
-        <Home />
+        <Layout />
       </ProtectedRoute>
     ),
+    children: [
+      {
+        path: "/",
+        element: <Home />,
+      },
+      {
+        path: "/settings",
+        element: <Settings />,
+      },
+      {
+        path: "/2fa-setup",
+        element: <TwoFactorSettings />,
+      },
+    ],
   },
-  {
-    path: "/settings",
-    element: (
-      <ProtectedRoute>
-        <TwoFactorSettings />
-      </ProtectedRoute>
-    ),
-  },
+
+  // Public auth routes
   {
     path: "/signup",
     element: <Signup />,
   },
   {
+    path: "/login",
+    element: <Login />,
+  },
+  {
     path: "/2fa-login",
-    element: <TwoFactorLogin/>,
+    element: <TwoFactorLogin />,
   },
   {
     path: "/verify",
@@ -47,10 +60,6 @@ const router = createBrowserRouter([
   {
     path: "/verify/:token",
     element: <Verify />,
-  },
-  {
-    path: "/login",
-    element: <Login />,
   },
   {
     path: "/auth-success",
@@ -67,6 +76,12 @@ const router = createBrowserRouter([
   {
     path: "/change-password/:email",
     element: <ChangePassword />,
+  },
+
+  // 404 catch-all
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 

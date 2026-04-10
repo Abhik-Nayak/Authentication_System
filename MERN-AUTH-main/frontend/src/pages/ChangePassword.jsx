@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/axios";
-import axios from "axios";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
+import AuthLayout from "@/components/AuthLayout";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -47,25 +47,24 @@ const ChangePassword = () => {
     }
   };
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#0B0F19] flex items-center justify-center px-4">
-      {/* Gradient blobs */}
-      <div className="absolute -top-32 -left-32 h-[400px] w-[400px] rounded-full bg-emerald-500/30 blur-[120px]" />
-      <div className="absolute -bottom-32 -right-32 h-[400px] w-[400px] rounded-full bg-cyan-500/30 blur-[120px]" />
+    <AuthLayout>
+      {/* Icon */}
+      <div className="mx-auto w-fit rounded-full p-3 bg-emerald-500/10">
+        <Lock className="h-8 w-8 text-emerald-400" />
+      </div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-md">
-        {/* Glass Card */}
-        <div className="backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl rounded-2xl p-6 space-y-4">
-          {/* Title */}
-          <h2 className="text-2xl font-semibold text-center bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-            Change Password
-          </h2>
+      {/* Glass Card */}
+      <div className="w-full backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl rounded-2xl p-6 space-y-4">
+        {/* Title */}
+        <h2 className="text-2xl font-semibold text-center bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+          Change Password
+        </h2>
 
-          {/* Subtitle */}
-          <p className="text-sm text-gray-400 text-center">
-            Set a new password for{" "}
-            <span className="text-white font-medium">{email}</span>
-          </p>
+        {/* Subtitle */}
+        <p className="text-sm text-gray-400 text-center">
+          Set a new password for{" "}
+          <span className="text-white font-medium">{email}</span>
+        </p>
 
           {/* Error / Success */}
           {error && <p className="text-red-400 text-sm text-center">{error}</p>}
@@ -107,10 +106,9 @@ const ChangePassword = () => {
                 "Change Password"
               )}
             </Button>
-          </div>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

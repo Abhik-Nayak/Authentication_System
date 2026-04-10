@@ -12,9 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
 import api from "@/lib/axios";
+import AuthLayout from "@/components/AuthLayout";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -52,25 +52,19 @@ const Signup = () => {
     }
   };
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#0B0F19] flex items-center justify-center px-4">
-      {/* Gradient blobs */}
-      <div className="absolute -top-32 -left-32 h-[400px] w-[400px] rounded-full bg-emerald-500/30 blur-[120px]" />
-      <div className="absolute -bottom-32 -right-32 h-[400px] w-[400px] rounded-full bg-cyan-500/30 blur-[120px]" />
+    <AuthLayout>
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight text-white">
+          Create your account
+        </h1>
+        <p className="text-sm text-gray-400">
+          Start organizing your thoughts and ideas today
+        </p>
+      </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 w-full max-w-md space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-white">
-            Create your account
-          </h1>
-          <p className="text-sm text-gray-400">
-            Start organizing your thoughts and ideas today
-          </p>
-        </div>
-
-        {/* Glass Card */}
-        <Card className="backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl rounded-2xl">
+      {/* Glass Card */}
+      <Card className="w-full backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl rounded-2xl">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
               Sign up
@@ -157,12 +151,21 @@ const Signup = () => {
           </CardFooter>
         </Card>
 
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-500">
-          By signing up, you agree to our Terms & Privacy Policy
-        </p>
-      </div>
-    </div>
+      {/* Footer links */}
+      <p className="text-center text-sm text-gray-400">
+        Already have an account?{" "}
+        <Link
+          to="/login"
+          className="text-emerald-400 hover:underline font-medium"
+        >
+          Login
+        </Link>
+      </p>
+
+      <p className="text-center text-xs text-gray-500">
+        By signing up, you agree to our Terms & Privacy Policy
+      </p>
+    </AuthLayout>
   );
 };
 

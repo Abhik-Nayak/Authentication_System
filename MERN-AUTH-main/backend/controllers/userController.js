@@ -7,6 +7,46 @@ import jwt from "jsonwebtoken";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password -twoFactorSecret -otp -token");
+    return res.status(200).json({
+      success: true,
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    await Session.deleteMany({ userId: id });
+    await User.findByIdAndDelete(id);
+    return res.status(200).json({
+      success: true,
+      message: `User ${user.email} deleted successfully`,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
