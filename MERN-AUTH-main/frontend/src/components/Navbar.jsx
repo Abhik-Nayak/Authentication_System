@@ -1,4 +1,4 @@
-import { BookA, BrainCircuitIcon, LogOut, Settings, User } from "lucide-react";
+import { BookA, BrainCircuitIcon, ListTodo, LogOut, Settings, User } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
 import {
@@ -100,10 +100,12 @@ const Navbar = () => {
                   Profile
                 </DropdownMenuItem>
 
-                <DropdownMenuItem className="flex gap-2 hover:bg-white/5 cursor-pointer">
-                  <BookA className="h-4 w-4" />
-                  Notes
-                </DropdownMenuItem>
+                <Link to="/todos">
+                  <DropdownMenuItem className="flex gap-2 hover:bg-white/5 cursor-pointer">
+                    <ListTodo className="h-4 w-4" />
+                    Todos
+                  </DropdownMenuItem>
+                </Link>
 
                 <Link to="/settings">
                   <DropdownMenuItem className="flex gap-2 hover:bg-white/5 cursor-pointer">

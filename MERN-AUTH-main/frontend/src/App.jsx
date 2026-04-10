@@ -15,6 +15,7 @@ import TwoFactorLogin from "./pages/TwoFactorLogin";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import Settings from "./pages/Settings";
+import Todos from "./pages/Todos";
 
 const router = createBrowserRouter([
   // Protected routes with Navbar
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
       {
         path: "/settings",
         element: <Settings />,
+      },
+      {
+        path: "/todos",
+        element: <Todos />,
       },
       {
         path: "/2fa-setup",
