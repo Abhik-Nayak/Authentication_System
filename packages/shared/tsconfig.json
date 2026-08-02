@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"],
+  // Tests are type-checked by ts-jest at run time; they must not land in dist/ or the published
+  // types would reference jest globals that consumers don't have.
+  "exclude": ["src/**/*.test.ts"]
+}

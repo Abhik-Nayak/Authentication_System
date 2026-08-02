@@ -1,0 +1,17 @@
+# Root entry point, so `docker compose up -d` works from the repo root with no -f flag.
+#
+# `project_directory: .` matters: without it Compose resolves the root .env relative to the
+# included file's own folder (infrastructure/docker/) and every ${VAR} would silently fall back
+# to its default.
+#
+# Phase 13 adds the six application services here; the infrastructure definition stays where it
+# is and gets included by both.
+
+# The project name must be set HERE, not in the included file — with `include`, the root file
+# owns the project, so a `name:` in the included file is ignored and Compose would fall back to
+# the directory name for volume and network prefixes.
+name: secure-notes
+
+include:
+  - path: infrastructure/docker/docker-compose.dev.yml
+    project_directory: .

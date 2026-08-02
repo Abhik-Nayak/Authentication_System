@@ -1,0 +1,80 @@
+# Local development infrastructure only — no application containers.
+# Apps run on the host via `npm run dev` and connect to these over published ports.
+# The full stack (6 apps + these) is assembled in Phase 13.
+#
+# Run from the repo root:  docker compose up -d
+
+name: secure-notes-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: secure-notes-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      # Pinned to `postgres` so the entrypoint does NOT create a stray database named after the
+      # user. The three real databases come from postgres-init/ instead.
+      POSTGRES_DB: postgres
+    ports:
+      # Bound to 127.0.0.1, not 0.0.0.0. Without the prefix Docker publishes on every interface
+      # and punches through the host firewall, exposing Postgres to the local network.
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Path is relative to the REPO ROOT, not to this file. The root compose file includes this
+      # one with `project_directory: .`, which makes Compose resolve every relative path from
+      # there. Writing `./postgres-init` fails silently: Docker Desktop auto-creates the missing
+      # directory instead of erroring, and Postgres starts with zero application databases.
+      - ./infrastructure/docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # `pg_isready` alone reports ready during the init pass, before postgres-init/ has run.
+      # Querying an actual app database is the only honest signal that setup finished.
+      test: ['CMD-SHELL', 'psql -U "$$POSTGRES_USER" -d todo_db -c "SELECT 1" || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  redis:
+    image: redis:8-alpine
+    container_name: secure-notes-redis
+    restart: unless-stopped
+    # No password locally. Redis holds only OTPs, mfaTokens and rate-limit counters — all
+    # short-lived and regenerable. Production uses ElastiCache with auth and TLS.
+    command: ['redis-server', '--save', '60', '1', '--loglevel', 'warning']
+    ports:
+      - '127.0.0.1:${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: secure-notes-mailhog
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${SMTP_PORT:-1025}:1025' # SMTP — notification-service sends here
+      - '127.0.0.1:8025:8025' # Web inbox — open http://localhost:8025
+    healthcheck:
+      # The image has no curl and no shell utilities beyond BusyBox; `wget --spider` is what's
+      # available. MailHog runs as a non-root user with no writable cwd, hence -O /dev/null.
+      test: ['CMD', 'wget', '--spider', '-q', '-O', '/dev/null', 'http://127.0.0.1:8025/']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  default:
+    name: secure-notes
+    # Phase 13 attaches the six application containers to this same network, so downstream
+    # services become reachable by name and stay unreachable from the host.

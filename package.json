@@ -1,0 +1,35 @@
+{
+  "name": "secure-notes",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Secure Notes & To-Do — microservice monorepo (Express + TypeScript)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "verify:workspace": "node -e \"const s=require('@secure-notes/shared');for(const k of ['AppError','errorHandler','asyncHandler','validate','requireUser','requireRole','logger','parsePagination','paginated'])if(!s[k])throw new Error('missing export: '+k);console.log('shared-ok')\"",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.65.0"
+  }
+}

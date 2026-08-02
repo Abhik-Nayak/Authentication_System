@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# env — never commit real secrets, only .env.example
+.env
+.env.*
+!.env.example
+
+# tests / tooling
+coverage/
+.eslintcache
+
+# logs
+logs/
+*.log
+npm-debug.log*
+
+# editors / os
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# prisma generated client
+**/node_modules/.prisma/
