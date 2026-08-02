@@ -12,13 +12,13 @@
   },
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build -w packages --if-present && npm run build -w apps --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck -w packages --if-present && npm run typecheck -w apps --if-present",
     "verify:workspace": "node -e \"const s=require('@secure-notes/shared');for(const k of ['AppError','errorHandler','asyncHandler','validate','requireUser','requireRole','logger','parsePagination','paginated'])if(!s[k])throw new Error('missing export: '+k);console.log('shared-ok')\"",
     "prepare": "husky"
   },

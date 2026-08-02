@@ -149,9 +149,28 @@ Not routed through the gateway — internal only.
 
 | Method | Path | Request | Success | Notes | Status |
 |---|---|---|---|---|---|
-| POST | `/internal/email` | `{ to, template, data }` | `202 { queued: true }` | Requires `x-internal-key`. Templates: `verifyEmail`, `resetPassword`, `otpCode`, `accountLocked`. | planned |
+| POST | `/internal/email` | `{ to, template, data }` | `202 { queued: true, messageId }` | Requires `x-internal-key` (timing-safe compare). `data` is validated per template via a discriminated union. | **built** |
+
+Template payloads:
+
+| `template` | `data` | Subject |
+|---|---|---|
+| `verifyEmail` | `{ verifyUrl: url }` | Verify your email address |
+| `resetPassword` | `{ resetUrl: url }` | Reset your password |
+| `otpCode` | `{ code: /^\d{6}$/ }` | `<code>` is your verification code |
+| `accountLocked` | `{ minutes: int > 0 }` | Your account has been temporarily locked |
+
+`202`, not `200`: SMTP accepted the message for relay. Delivery is not something this service can
+observe.
 
 ## Health
 
-Every service exposes `GET /health` → `200 { status: "ok" }`. The gateway's version aggregates
-downstream health.
+Every service exposes `GET /health`, unauthenticated. It asserts the service's real dependencies
+rather than returning a constant, and returns **503** when one is down — a check that cannot fail
+carries no information.
+
+| Service | Checks | Healthy | Degraded |
+|---|---|---|---|
+| notification-service | SMTP handshake | `200 { status: "ok", smtp: "up" }` | `503 { status: "degraded", smtp: "down" }` |
+
+The gateway's version aggregates downstream health.

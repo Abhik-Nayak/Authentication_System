@@ -10,8 +10,19 @@ starting with [LEARNING/PHASE-0.md](LEARNING/PHASE-0.md).
 
 ## Status
 
-Phases 0–3 complete — repo skeleton, design docs, local infrastructure, shared package. No
-services yet.
+Phases 0–4 complete. One service exists: **notification-service** on 4004.
+
+```bash
+docker compose up -d --wait                        # infra
+npm run build
+npm run dev -w @secure-notes/notification-service  # or: npm start -w ...
+
+curl localhost:4004/health
+curl -X POST localhost:4004/internal/email \
+  -H "x-internal-key: $INTERNAL_API_KEY" -H 'content-type: application/json' \
+  -d '{"to":"you@example.com","template":"otpCode","data":{"code":"482913"}}'
+# -> 202, then open http://localhost:8025
+```
 
 ## Local infrastructure
 

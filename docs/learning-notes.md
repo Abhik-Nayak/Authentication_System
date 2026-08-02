@@ -176,3 +176,51 @@ Second: Express identifies error middleware by **function arity**. Dropping the 
 and direct-call unit tests still pass.
 
 Details: [`LEARNING/PHASE-3.md`](../LEARNING/PHASE-3.md)
+
+---
+
+## Phase 4 — Notification service (2026-08-02)
+
+**Built.** `apps/notification-service` on 4004 — `index.ts`, `app.ts`, `config.ts`, `mailer.ts`,
+`middleware/internalKey.ts`, and `modules/email/{routes,controller,service,schema}.ts` plus
+`templates.ts` and `modules/health/health.routes.ts`. Four templates, `POST /internal/email`
+guarded by `x-internal-key`, `GET /health`. Verified end to end against MailHog.
+
+**Deviation from the plan's file shape.** The template lists a per-service `middleware/` folder
+with `error.ts`/`async.ts`/`validate.ts`/`requireUser.ts`; those live in `packages/shared` as of
+Phase 3, so `middleware/` holds only the service-specific `internalKey.ts`.
+
+**Chosen / rejected.**
+
+- *`202 Accepted`, not `200 OK`* — SMTP accepted the message for relay; delivery is not something
+  this service can know. 200 would let callers build support flows on a false premise.
+- *Discriminated union on `template`* over a loose `data` object plus a runtime registry. Gives
+  per-template validation at the boundary **and** a `switch` the compiler proves is exhaustive —
+  adding a template without handling it is a `tsc` failure, not a 3am 500.
+- *`crypto.timingSafeEqual`* over `===` for the internal key. Byte-by-byte short-circuiting turns a
+  32-char key from 256³² guesses into 32 × 256 over a low-latency internal network.
+- *`/health` calls `transporter.verify()`* rather than returning a constant — Phase 2's lesson
+  applied one layer up. Costs an SMTP connection per probe; correct at this scale, would not be if
+  the check fanned out to several dependencies.
+- *No `MailProvider` interface.* One implementation; a comment in `mailer.ts` marks where SES swaps
+  in. An adapter for a single implementation is the abstraction this plan exists to avoid.
+- *`config.ts` exits 1 on invalid env* with field-level errors, so a missing `SMTP_HOST` is a failed
+  boot rather than a failed registration hours later.
+
+**Learned.** `npm run build` **could not build a clean clone** — `--workspaces` runs in directory
+order, so `apps/*` compiled before `packages/shared/dist` existed and every import failed with
+`TS2307`. It passed locally only because a stale `dist/` from Phase 3 was masking it. This is
+precisely the trade Phase 0 accepted and named: npm workspaces has no dependency-ordered task graph.
+Fixed by sequencing explicitly — `npm run build -w packages && npm run build -w apps` (`-w <dir>`
+selects every workspace beneath it). npm does exit non-zero on a failed workspace, so Phase 16's CI
+would have caught it, but only after the phase that introduced it.
+
+Second, unplanned and the best evidence in this phase: the compose stack happened to be down when
+`/health` was first called. It returned `503 degraded`, then flipped to `200 ok` **on its own** once
+MailHog came back — no restart. A hardcoded `{status:"ok"}` would have lied in both directions.
+
+Third: the HTML-escaping test only proved anything once it used a `"` rather than `<script>` — an
+unescaped quote inside `href="..."` closes the attribute early, which is the actual injection
+vector in an email template.
+
+Details: [`LEARNING/PHASE-4.md`](../LEARNING/PHASE-4.md)

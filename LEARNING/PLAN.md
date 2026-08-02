@@ -639,7 +639,7 @@ Skipped on purpose, each with a short `docs/` note on how it would be added. Do 
 - [x] Phase 1 — Docs skeleton + decisions — done 2026-07-30 ([PHASE-1.md](PHASE-1.md))
 - [x] Phase 2 — Local infrastructure — done 2026-07-30 ([PHASE-2.md](PHASE-2.md))
 - [x] Phase 3 — Shared package — done 2026-07-30 ([PHASE-3.md](PHASE-3.md))
-- [ ] Phase 4 — Notification service
+- [x] Phase 4 — Notification service — done 2026-08-02 ([PHASE-4.md](PHASE-4.md))
 - [ ] Phase 5 — Auth service core
 - [ ] Phase 6 — 2FA
 - [ ] Phase 7 — API Gateway

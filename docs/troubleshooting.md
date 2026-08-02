@@ -4,6 +4,54 @@ Errors actually hit while building this, with the fix. Appended each phase.
 
 ---
 
+## Phase 4 — notification service
+
+### `TS2307: Cannot find module '@secure-notes/shared'` when building a fresh clone
+
+`npm run build` worked yesterday and fails on a clean checkout. `--workspaces` runs scripts in
+**directory order**, so `apps/*` compiles before `packages/shared/dist` exists. It passes on a
+machine where a stale `dist/` is lying around, which is what makes it a clean-clone-only failure.
+
+npm workspaces has no dependency-ordered task graph — that is one of the two things Turborepo would
+add. Sequence it manually in the root `package.json` (`-w <dir>` selects every workspace under that
+directory):
+
+```json
+"build": "npm run build -w packages --if-present && npm run build -w apps --if-present"
+```
+
+Reproduce before and after with `rm -rf packages/*/dist apps/*/dist && npm run build`.
+
+---
+
+### `GET /health` returns 503 `{"smtp":"down"}`
+
+Working as intended — the probe opens a real SMTP connection. Check the dependency, not the
+service:
+
+```bash
+docker compose ps                 # is mailhog running and healthy?
+docker compose up -d --wait
+```
+
+No restart of the service is needed; the next probe recovers on its own.
+
+---
+
+### `POST /internal/email` returns 401 with a correct-looking key
+
+The comparison is timing-safe and length-sensitive. Trailing whitespace or a newline in the header
+value makes the lengths differ and fails the check before the byte comparison runs. Both "missing"
+and "wrong" return the identical message on purpose, so the error text won't tell you which.
+
+Check the value actually being sent, not the value in `.env`:
+
+```bash
+curl -v -H "x-internal-key: $KEY" ...   # -v echoes the header as sent
+```
+
+---
+
 ## Phase 3 — shared package
 
 ### `TypeError: Cannot set property query of #<IncomingMessage> which has only a getter`
